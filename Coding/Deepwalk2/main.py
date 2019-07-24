@@ -57,7 +57,7 @@ def main():
 #     args = parser.parse_args()
     args = parser.parse_args("--input ./karate.adjlist "
                              "--output ./output "
-                             "--representation-size 4".split())
+                             "--representation-size 16".split())
 
     print(args)
     process(args)

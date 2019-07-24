@@ -7,6 +7,7 @@
 import numpy
 from collections import deque
 from huffman import HuffmanTree
+import sys
 
 numpy.random.seed(12345)
 
@@ -54,31 +55,35 @@ class InputData:
         self.word_count = len(self.word2id)
         input_file.close()
         
-    def get_batch_pairs(self, batch_size, window_size):
-        input_file = open(self.input_file) # 貌似每次打开文件都只会读前几行？？？
+    def get_batch_pairs(self, batch_size, window_size, input_file):
+#         input_file = open(self.input_file) # 貌似每次打开文件都只会读前几行？？？
         while len(self.word_pair_catch) < batch_size:
             sentence = input_file.readline()
+            print(sentence)
+            if not sentence:
+                return []
             word_ids = []
             for word in sentence.strip().split(' '):
                 try:
                     word_ids.append(self.word2id[word])
                 except:
                     continue
-            
             for i, center_wid in enumerate(word_ids):
-                window_wids = word_ids[max(0, i-window_size) : i+window_size]
+                window_wids = word_ids[max(0, i-window_size) : i+window_size+1]
                 for j, window_wid in enumerate(window_wids):
                     assert center_wid < self.word_count# 测试
                     assert window_wid < self.word_count
-                    if i == j:
+                    if center_wid == window_wid:
                         continue
                     self.word_pair_catch.append((center_wid, window_wid))
-                    
+        
+#         print(len(self.word_pair_catch))
+#         sys.exit()
         batch_pairs = []
         for _ in range(batch_size):
             batch_pairs.append(self.word_pair_catch.popleft())
         
-        input_file.close()
+#         input_file.close()
         return batch_pairs
     
     def get_pairs_from_huffman(self, word_pairs): #把一个点对根据huffman变成一正一负（负采样）
@@ -94,6 +99,5 @@ class InputData:
         return pos_word_pairs, neg_word_pairs# 是什么
     
     def evaluate_pair_count(self, window_size):
-        return self.sentence_sum_length * (2 * window_size -1) - (self.sentence_count - 1) * (1 + window_size) * window_size
-    # 窗口全满-窗口空缺
+        return self.sentence_sum_length * (2 * window_size) - (self.sentence_count) * (1 + window_size) * window_size
 
